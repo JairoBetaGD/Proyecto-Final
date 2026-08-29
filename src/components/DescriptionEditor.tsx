@@ -22,6 +22,17 @@ interface DescriptionEditorProps {
 
 type PromptKind = 'link' | 'map' | null;
 
+/** Adjunto cuya subida al almacenamiento falló y puede reintentarse. */
+interface FailedUpload {
+  key: number;
+  file: File;
+  name: string;
+  reason: string;
+  retrying: boolean;
+  /** Si se agregó como imagen (tipo forzado a IMAGE). */
+  image: boolean;
+}
+
 // DRY: formatFileSize se reutiliza de utils/attachmentLimits
 // (antes estaba duplicado aquí).
 
@@ -268,6 +279,27 @@ const toolbarButtonClass =
 // incluida la descripción). Constantes centralizadas en utils/attachmentLimits.
 const MAX_FILE_SIZE_LABEL = `${MAX_FILE_MB} MB`;
 
+/**
+ * Construye el metadato del adjunto a partir del File seleccionado.
+ * DRY: lo usan tanto la subida inicial como el reintento de un archivo fallido.
+ */
+const buildAttachment = (file: File, asImage: boolean): CommunicationAttachment => {
+  const fileType = getFileType(file.name);
+  let attachmentType = fileType;
+  if (asImage) {
+    attachmentType = 'IMAGE';
+  }
+  if (/^(VIDEO|MP4|WEBM|MOV|AVI|MKV)$/i.test(fileType)) {
+    attachmentType = 'VIDEO';
+  }
+  return {
+    name: file.name,
+    size: formatFileSize(file.size),
+    type: attachmentType,
+    mimeType: file.type || '',
+  };
+};
+
 // Subir un archivo a Vercel Blob y devolver la URL pública.
 // La subida es directa del navegador al almacenamiento (client uploads);
 // el backend solo firma la autorización (ver src/services/blob.ts).
@@ -301,6 +333,11 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
   const [mapResolving, setMapResolving] = useState(false);
   const [sizeError, setSizeError] = useState<string | null>(null);
   const [oversizedFiles, setOversizedFiles] = useState<Record<string, boolean>>({});
+  // Adjuntos que no se pudieron subir al almacenamiento; se muestran con la
+  // causa real y una opción de reintentar (en vez de descartarse en silencio).
+  const [failedUploads, setFailedUploads] = useState<FailedUpload[]>([]);
+  const [uploadingCount, setUploadingCount] = useState(0);
+  const failedUploadKeyRef = useRef(0);
 
   // Tamaño total del comunicado: contenido HTML. Los archivos ya no se guardan
 // como binario en Mongo (se suben a Vercel Blob y se guarda la URL), por lo que
@@ -400,33 +437,36 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
 
     const enriched: CommunicationAttachment[] = [];
     for (const file of Array.from(files)) {
-                  const fileType = getFileType(file.name);
-      // Determinar el tipo de attachment para el visor
-      let attachmentType = fileType;
-      if (asImage) {
-        attachmentType = 'IMAGE';
-      }
-      if (/^(VIDEO|MP4|WEBM|MOV|AVI|MKV)$/i.test(fileType)) {
-        attachmentType = 'VIDEO';
-      }
-
-      const attachment: CommunicationAttachment = {
-        name: file.name,
-        size: formatFileSize(file.size),
-        type: attachmentType,
-        mimeType: file.type || '',
-      };
+      const attachment = buildAttachment(file, asImage);
 
       if (file.size <= MAX_FILE_BYTES) {
+        setUploadingCount((count) => count + 1);
         try {
           attachment.url = await uploadFile(file);
+          // Si este archivo había fallado antes (lista de reintento), se limpia.
+          setFailedUploads((prev) => prev.filter((failed) => failed.name !== file.name));
         } catch (error) {
           console.error('No se pudo subir el archivo a Vercel Blob:', error);
           // No adjuntar archivos sin URL: quedarían inaccesibles al previsualizar.
-          setSizeError(
-            `No se pudo subir "${file.name}" al almacenamiento. El archivo no fue adjuntado. Intenta nuevamente.`
-          );
+          // Se registran en la lista de fallidos con la causa real y la opción
+          // de «Reintentar», en lugar de descartarse en silencio.
+          setFailedUploads((prev) => [
+            ...prev,
+            {
+              key: ++failedUploadKeyRef.current,
+              file,
+              name: file.name,
+              reason:
+                error instanceof Error
+                  ? error.message
+                  : 'Error desconocido al subir el archivo.',
+              retrying: false,
+              image: asImage,
+            },
+          ]);
           continue;
+        } finally {
+          setUploadingCount((count) => Math.max(0, count - 1));
         }
       } else {
         setSizeError(
@@ -442,6 +482,35 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
 
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (imageInputRef.current) imageInputRef.current.value = '';
+  };
+
+  /** Reintenta la subida de un archivo que falló, conservando el metadato. */
+  const retryUpload = async (failed: FailedUpload) => {
+    const attachment = buildAttachment(failed.file, failed.image);
+    setFailedUploads((prev) =>
+      prev.map((item) => (item.key === failed.key ? { ...item, retrying: true } : item))
+    );
+    try {
+      attachment.url = await uploadFile(failed.file);
+      onAttachmentsChange([...attachments, attachment]);
+      setFailedUploads((prev) => prev.filter((item) => item.key !== failed.key));
+    } catch (error) {
+      console.error('No se pudo reintentar la subida del archivo:', error);
+      setFailedUploads((prev) =>
+        prev.map((item) =>
+          item.key === failed.key
+            ? {
+                ...item,
+                reason:
+                  error instanceof Error
+                    ? error.message
+                    : 'Error desconocido al subir el archivo.',
+                retrying: false,
+              }
+            : item
+        )
+      );
+    }
   };
 
   const deleteAttachment = (index: number) => {
@@ -541,6 +610,11 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
           }`}
           title="Los archivos se guardan en la base de datos (máx. 15 MB por archivo y 15 MB por comunicado, contenido incluido)"
         >
+          {uploadingCount > 0 && (
+            <span className="text-[#002d5c]">
+              Subiendo {uploadingCount} archivo{uploadingCount === 1 ? '' : 's'}…
+            </span>
+          )}
           <span className="material-symbols-outlined text-[15px]">info</span>
           <span>
             Máx. {MAX_FILE_SIZE_LABEL}/archivo • {formatFileSize(totalPayloadBytes)} de{' '}
@@ -565,6 +639,56 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
           >
             <span className="material-symbols-outlined text-[14px]">close</span>
           </button>
+        </div>
+      )}
+
+      {/* Archivos que no se pudieron subir al almacenamiento, con la causa
+          real y la opción de reintentar o descartar */}
+      {failedUploads.length > 0 && (
+        <div className="mt-2 mx-3 space-y-2">
+          {failedUploads.map((failed) => (
+            <div
+              key={failed.key}
+              className="flex items-start gap-2 rounded-md border border-[#ba1a1a]/30 bg-[#ffdad6] px-3 py-2"
+            >
+              <span className="material-symbols-outlined text-[16px] text-[#ba1a1a]">
+                error
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] leading-4 text-[#93000a] font-medium break-words">
+                  No se pudo subir &quot;{failed.name}&quot; al almacenamiento. El archivo no
+                  fue adjuntado.
+                </p>
+                <p className="text-[11px] leading-4 text-[#93000a]/90 mt-0.5 break-words">
+                  {failed.reason}
+                </p>
+                {failed.retrying && (
+                  <p className="text-[11px] leading-4 text-[#93000a] mt-0.5">
+                    Reintentando…
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                title="Reintentar subida"
+                className="text-[#93000a] hover:text-[#ba1a1a] cursor-pointer p-0.5 disabled:opacity-50"
+                disabled={failed.retrying}
+                onClick={() => retryUpload(failed)}
+              >
+                <span className="material-symbols-outlined text-[14px]">refresh</span>
+              </button>
+              <button
+                type="button"
+                title="Descartar archivo"
+                className="text-[#93000a] hover:text-[#ba1a1a] cursor-pointer p-0.5"
+                onClick={() =>
+                  setFailedUploads((prev) => prev.filter((item) => item.key !== failed.key))
+                }
+              >
+                <span className="material-symbols-outlined text-[14px]">close</span>
+              </button>
+            </div>
+          ))}
         </div>
       )}
 

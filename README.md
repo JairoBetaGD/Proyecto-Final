@@ -299,7 +299,7 @@ Base URL: `http://localhost:5000/api`
 }
 ```
 
-> Los **adjuntos** se suben primero a `POST /api/upload` (Vercel Blob) y el payload solo registra su **URL pública**. MongoDB no almacena binarios.
+> Los **adjuntos** se suben primero desde el navegador a Vercel Blob (client uploads: `POST /api/upload-client` firma la autorización y el binario viaja directo al almacenamiento) y el payload solo registra su **URL pública**. MongoDB no almacena binarios.
 
 ### Respuesta de `/api/upload`
 
