@@ -8,9 +8,9 @@
 import Announcement from '../models/Announcement.js';
 
 export const announcementRepository = {
-  /** Lista todos los comunicados, del más reciente al más antiguo. */
-  findAll() {
-    return Announcement.find().sort({ createdAt: -1 });
+  /** Lista los comunicados (filtrados opcionalmente), del más reciente al más antiguo. */
+  findAll(filter = {}) {
+    return Announcement.find(filter).sort({ createdAt: -1 });
   },
 
   findById(id) {

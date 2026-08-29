@@ -15,7 +15,7 @@ interface BMEditarComunicadoProps {
 
 const defaultFormData: AnnouncementFormData = {
   title: 'Actualización de Protocolos de Seguridad 2024',
-  category: 'scal',
+  category: 'adm',
   priority: 'high',
   description:
     'Estimado equipo, a partir del próximo mes implementaremos nuevas medidas de seguridad en todas nuestras terminales...',

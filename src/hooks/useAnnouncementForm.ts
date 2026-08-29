@@ -2,6 +2,8 @@
  * Hook for managing the announcement creation/edit form state and submission.
  *
  * SRP: Separates form state, validation, and submission logic from UI rendering.
+ * La construcción del payload HTTP vive en `utils/announcementPayload.ts`
+ * (mapeador puro reutilizable).
  * DIP: Depends on the api service abstraction (createAnnouncement/updateAnnouncement),
  * not on concrete implementations.
  */
@@ -10,9 +12,8 @@ import {
   createAnnouncement,
   updateAnnouncement,
 } from '../services/api';
-import { mapCategoryToApiValue, mapPriorityToApiValue } from '../data/communications';
 import type { CommunicationAttachment, CommunicationMap } from '../data/communications';
-import { sanitizeHtml } from '../utils/sanitizeHtml';
+import { buildAnnouncementPayload } from '../utils/announcementPayload';
 import { MAX_TOTAL_BYTES } from '../utils/attachmentLimits';
 
 export interface AnnouncementFormData {
@@ -134,17 +135,8 @@ export function useAnnouncementForm({
     setIsSubmitting(true);
     setSubmitStatus('idle');
 
-    const payload = {
-      title: formData.title.trim(),
-      category: mapCategoryToApiValue(formData.category),
-      priority: mapPriorityToApiValue(formData.priority),
-      content: sanitizeHtml(formData.description).trim(),
-      author: 'Equipo administrativo',
-      publishImmediately: formData.publishImmediately,
-      status: formData.publishImmediately ? 'Publicado' : 'Borrador',
-      attachments: formData.attachments,
-      maps: formData.maps,
-    };
+    // SRP: el mapeo formulario -> contrato HTTP vive en el mapeador puro.
+    const payload = buildAnnouncementPayload(formData);
 
     try {
       if (announcementId) {

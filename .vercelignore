@@ -1,0 +1,14 @@
+# Archivos que Vercel no necesita recibir (los instala/genera en el build).
+# Solo afecta a despliegues con la CLI (`vercel`); el despliegue vía Git
+# usa lo que hay en el repositorio.
+
+node_modules
+backend/node_modules
+dist
+.vercel
+.git
+
+# Secretos y logs: nunca deben subir al despliegue
+.env
+.env.*
+*.log

@@ -17,12 +17,26 @@ import {
   type Communication,
 } from '../../data/communications';
 
+// SRP: el filtrado/orden de listados vive en su propia utilidad reutilizable.
+import {
+  applyCommunicationFilters,
+  isDefaultFilterState,
+  PRIORITY_FILTER_OPTIONS,
+  SORT_OPTIONS,
+  type PriorityFilter,
+  type SortOption,
+} from '../../utils/communicationFilters';
+
 // SRP/OCP: mapeo Communication -> detalle delegado a un mapeador puro.
 import { toCommunicationListPreview } from '../../utils/communicationMappers';
 
 import { useCommunications } from '../../hooks/useCommunications';
+import { useAuth } from '../../hooks/useAuth';
 
 const BMComunicadosFull: React.FC = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const {
     communications,
     isLoading,
@@ -37,6 +51,23 @@ const BMComunicadosFull: React.FC = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  // Filtros del listado: prioridad y orden (fecha o alfabético).
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
+  const [sortOption, setSortOption] = useState<SortOption>('date-desc');
+
+  const isDefaultView = isDefaultFilterState(priorityFilter, sortOption);
+
+  const visibleCommunications: Communication[] = applyCommunicationFilters(
+    communications,
+    priorityFilter,
+    sortOption
+  );
+
+  const handleResetFilters = () => {
+    setPriorityFilter('all');
+    setSortOption('date-desc');
+  };
 
   const handleView = (comm: Communication) => {
     setSelectedCommunication(comm);
@@ -130,6 +161,51 @@ const BMComunicadosFull: React.FC = () => {
               </button>
             </div>
 
+            {/* Barra de filtros: prioridad y orden */}
+            <div className="px-6 py-3 flex flex-wrap items-center gap-3 border-b border-[#c4c6d0] bg-[#f7f9fb]">
+              <span className="text-[12px] leading-4 tracking-[0.05em] font-semibold text-[#43474f] flex items-center gap-1">
+                <span className="material-symbols-outlined text-[18px]">filter_list</span>
+                Filtros
+              </span>
+
+              <select
+                value={priorityFilter}
+                onChange={(event) => setPriorityFilter(event.target.value as PriorityFilter)}
+                aria-label="Filtrar por prioridad"
+                className="px-3 py-2 rounded-lg border border-[#c4c6d0] bg-white text-[13px] leading-[18px] font-medium text-[#001736] focus:ring-2 focus:ring-[#001736] outline-none"
+              >
+                {PRIORITY_FILTER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={sortOption}
+                onChange={(event) => setSortOption(event.target.value as SortOption)}
+                aria-label="Ordenar comunicados"
+                className="px-3 py-2 rounded-lg border border-[#c4c6d0] bg-white text-[13px] leading-[18px] font-medium text-[#001736] focus:ring-2 focus:ring-[#001736] outline-none"
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              {!isDefaultView && (
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="flex items-center gap-1 px-3 py-2 rounded-lg text-[12px] leading-4 tracking-[0.05em] font-semibold text-[#93000a] hover:bg-[#ffdad6] transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]">restart_alt</span>
+                  Limpiar filtros
+                </button>
+              )}
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead className="bg-[#eceef0]/50 text-[#43474f] text-[12px] leading-4 tracking-[0.05em] font-semibold uppercase tracking-wider">
@@ -162,8 +238,14 @@ const BMComunicadosFull: React.FC = () => {
                         No hay comunicados registrados todavía.
                       </td>
                     </tr>
+                  ) : visibleCommunications.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-8 text-center text-[#43474f]">
+                        Ningún comunicado coincide con los filtros aplicados.
+                      </td>
+                    </tr>
                   ) : (
-                    communications.map((comm) => (
+                    visibleCommunications.map((comm) => (
                       <tr
                         key={comm.id}
                         className="hover:bg-[#eceef0] transition-colors cursor-pointer group"
@@ -193,20 +275,24 @@ const BMComunicadosFull: React.FC = () => {
                           >
                             <span className="material-symbols-outlined">visibility</span>
                           </button>
-                          <button
-                            onClick={() => handleEdit(comm)}
-                            className="text-[#001736] hover:bg-[#001736]/10 p-2 rounded-full transition-colors"
-                            title="Editar comunicado"
-                          >
-                            <span className="material-symbols-outlined">edit</span>
-                          </button>
-                          <button
-                            onClick={() => handleDelete(comm)}
-                            className="text-[#93000a] hover:bg-[#ffdad6] p-2 rounded-full transition-colors"
-                            title="Eliminar comunicado"
-                          >
-                            <span className="material-symbols-outlined">delete</span>
-                          </button>
+                          {isAdmin && (
+                            <>
+                              <button
+                                onClick={() => handleEdit(comm)}
+                                className="text-[#001736] hover:bg-[#001736]/10 p-2 rounded-full transition-colors"
+                                title="Editar comunicado"
+                              >
+                                <span className="material-symbols-outlined">edit</span>
+                              </button>
+                              <button
+                                onClick={() => handleDelete(comm)}
+                                className="text-[#93000a] hover:bg-[#ffdad6] p-2 rounded-full transition-colors"
+                                title="Eliminar comunicado"
+                              >
+                                <span className="material-symbols-outlined">delete</span>
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -217,7 +303,7 @@ const BMComunicadosFull: React.FC = () => {
 
             <div className="px-6 py-4 bg-[#f2f4f6] border-t border-[#c4c6d0] flex justify-between items-center text-[12px] leading-4 tracking-[0.05em] font-semibold text-[#43474f]">
               <span>
-                Mostrando 1-{Math.min(communications.length, 3)} de {communications.length} comunicados
+                Mostrando {visibleCommunications.length} de {communications.length} comunicados
               </span>
               <div className="flex space-x-2">
                 <button className="px-3 py-1 border border-[#c4c6d0] rounded hover:bg-white transition-colors">

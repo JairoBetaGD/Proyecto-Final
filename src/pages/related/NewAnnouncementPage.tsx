@@ -1,9 +1,11 @@
 import React from 'react';
 import SidebarMenu from '../../components/SidebarMenu';
 import TopBar from '../../components/TopBar';
-import { useAnnouncementForm } from '../../hooks/useAnnouncementForm';
+import { useAnnouncementForm, EMPTY_FORM_DATA } from '../../hooks/useAnnouncementForm';
 import { AnnouncementFormFields } from '../../components/AnnouncementFormFields';
 import { FormFooter } from '../../components/AnnouncementFormFooter';
+import { useAuth } from '../../hooks/useAuth';
+import { getCategoryValueForForm } from '../../data/communications';
 
 interface BMNuevoComunicadoProps {
   embedded?: boolean;
@@ -16,6 +18,15 @@ const BMNuevoComunicado: React.FC<BMNuevoComunicadoProps> = ({
   onCancel,
   onSubmitSuccess,
 }) => {
+  const { user } = useAuth();
+
+  // Los usuarios normales crean comunicados de SU departamento (preseleccionado).
+  // El admin elige el departamento que quiera.
+  const isRegularUser = user?.role === 'user' && Boolean(user.department);
+  const initialData = isRegularUser
+    ? { ...EMPTY_FORM_DATA, category: getCategoryValueForForm(user.department ?? '') }
+    : undefined;
+
   const {
     formData,
     isSubmitting,
@@ -29,7 +40,7 @@ const BMNuevoComunicado: React.FC<BMNuevoComunicadoProps> = ({
     setFormAttachments,
     setFormMaps,
     isOverLimit,
-  } = useAnnouncementForm({ onSubmitSuccess });
+  } = useAnnouncementForm({ onSubmitSuccess, initialData });
 
   const handleCancel = () => {
     resetForm();

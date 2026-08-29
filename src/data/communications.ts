@@ -10,25 +10,37 @@ export type CommunicationPriority = 'Alta' | 'Media' | 'Baja';
  * mapa directo y CATEGORY_OPTIONS en AnnouncementFormFields).
  */
 export const CATEGORY_MAP: Record<string, string> = {
-  scal: 'Servicio al cliente',
-  cnt: 'Counter',
-  alm: 'Almacén',
-  dig: 'Digitación',
-  dev: 'Devolución',
-  it: 'TI',
+  adm: 'Administración',
+  fin: 'Finanzas',
   rh: 'Recursos Humanos',
-  con: 'Contabilidad',
-  suc: 'Sucursales',
+  mkt: 'Marketing',
+  ven: 'Ventas',
+  ope: 'Operaciones',
+  log: 'Logística',
   com: 'Compras',
+  it: 'Tecnología',
+  leg: 'Legal',
 };
 
 /** Código usado como categoría por defecto cuando no hay coincidencia. */
-export const DEFAULT_CATEGORY_CODE = 'scal';
+export const DEFAULT_CATEGORY_CODE = 'adm';
 
-/** Alias históricos aceptados al convertir una etiqueta a código. */
+/**
+ * Alias históricos aceptados al convertir una etiqueta a código.
+ * Incluyen nombres de departamentos anteriores (específicos/anticuados) para
+ * que los comunicados ya guardados sigan mapeando correctamente al editar.
+ */
 const CATEGORY_LABEL_ALIASES: Record<string, string> = {
   Sistemas: 'it',
+  TI: 'it',
   RRHH: 'rh',
+  'Servicio al cliente': 'ven',
+  Counter: 'ven',
+  Almacén: 'log',
+  Digitación: 'ope',
+  Devolución: 'log',
+  Sucursales: 'ven',
+  Contabilidad: 'fin',
 };
 
 /** Opciones para <select>, derivadas del mapa (no duplicarlas a mano). */
@@ -75,7 +87,7 @@ export const communicationsData: Communication[] = [
   {
     id: '1',
     title: 'Actualización de Protocolos de Seguridad 2024',
-    category: 'Almacén',
+    category: 'Logística',
     status: 'Publicado',
     priority: 'Alta',
     date: '12 May 2024',
@@ -91,11 +103,11 @@ export const communicationsData: Communication[] = [
   {
     id: '2',
     title: 'Nuevo Horario de Atención - Sucursal Este',
-    category: 'Sucursales',
+    category: 'Operaciones',
     status: 'Publicado',
     priority: 'Baja',
     date: '10 May 2024',
-    author: 'Equipo Sucursales',
+    author: 'Equipo de Operaciones',
     content: 'Se informa el cambio de horario de atención para la sucursal este.',
     maps: [
       {
@@ -107,11 +119,11 @@ export const communicationsData: Communication[] = [
   {
     id: '3',
     title: 'Cierre por Mantenimiento Plataforma Web',
-    category: 'IT',
+    category: 'Tecnología',
     status: 'Borrador',
     priority: 'Media',
     date: '08 May 2024',
-    author: 'IT Global',
+    author: 'Equipo de Tecnología',
     content: 'Se realizará mantenimiento programado para la plataforma web.',
   },
   {
@@ -127,11 +139,11 @@ export const communicationsData: Communication[] = [
   {
     id: '5',
     title: 'Actualización mantenimiento de servidores',
-    category: 'TI',
+    category: 'Tecnología',
     status: 'Borrador',
     priority: 'Media',
     date: '10 Oct 2023',
-    author: 'IT Global',
+    author: 'Equipo de Tecnología',
     content: 'Se actualizará la infraestructura de servidores corporativos.',
   },
 ];
@@ -167,7 +179,7 @@ const normalizePriority = (priority?: string): CommunicationPriority => {
 export const normalizeCommunication = (item: Record<string, unknown> = {}): Communication => ({
   id: String(item._id ?? item.id ?? ''),
   title: isString(item.title) ? item.title : '',
-  category: isString(item.category) ? item.category : 'Servicio al cliente',
+  category: isString(item.category) ? item.category : 'Administración',
   status: (isString(item.status) ? item.status : 'Publicado') as CommunicationStatus,
   priority: normalizePriority(isString(item.priority) ? item.priority : undefined),
   date: formatDisplayDate(

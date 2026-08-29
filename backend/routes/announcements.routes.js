@@ -1,82 +1,89 @@
 /**
  * Rutas CRUD de comunicados.
  *
- * SRP: manejan únicamente HTTP (parsear request, responder).
- * DIP: acceden a los datos a través del repositorio y transforman con
- * mapeadores puros, sin conocer Mongoose.
+ * SRP: manejan únicamente HTTP (parsear request, responder y mapear la
+ * respuesta). Las reglas de negocio (visibilidad por rol, defaults de
+ * `status`/`code`, normalización de adjuntos) viven en
+ * `services/announcementService.js`.
  *
- * La lógica de negocio de defaults (status y código) vive aquí porque es
- * específica del contrato HTTP de creación.
+ * OCP: los errores se traducen a JSON mediante `asyncHandler`; esta capa no
+ * repite try/catch y los errores de negocio (HttpError/AuthError) ya llevan
+ * su propio código HTTP.
  */
 import { Router } from 'express';
-import { announcementRepository } from '../repositories/announcementRepository.js';
 import {
-  announcementToResponse,
-  attachmentsPayloadToDb,
-} from '../mappers/announcementMapper.js';
+  listVisibleAnnouncements,
+  getAnnouncementById,
+  createAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncementById,
+} from '../services/announcementService.js';
+import { announcementToResponse } from '../mappers/announcementMapper.js';
+import { requireAuth, requireAdmin } from '../middlewares/auth.js';
+import { asyncHandler } from '../middlewares/errorHandler.js';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
-  try {
-    const announcements = await announcementRepository.findAll();
+/**
+ * GET /api/announcements
+ *
+ * Lista los comunicados visibles para la cuenta autenticada.
+ */
+router.get(
+  '/',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const announcements = await listVisibleAnnouncements(req.auth);
     res.json(announcements.map(announcementToResponse));
-  } catch (error) {
-    res.status(500).json({ message: 'Error al obtener los comunicados', error: error.message });
-  }
-});
+  }, { message: 'Error al obtener los comunicados' })
+);
 
-router.get('/:id', async (req, res) => {
-  try {
-    const announcement = await announcementRepository.findById(req.params.id);
+router.get(
+  '/:id',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const announcement = await getAnnouncementById(req.params.id);
     if (!announcement) {
       return res.status(404).json({ message: 'Comunicado no encontrado' });
     }
     res.json(announcementToResponse(announcement));
-  } catch (error) {
-    res.status(500).json({ message: 'Error al obtener el comunicado', error: error.message });
-  }
-});
+  }, { message: 'Error al obtener el comunicado' })
+);
 
-router.post('/', async (req, res) => {
-  try {
-    const payload = attachmentsPayloadToDb(req.body);
-
-    const saved = await announcementRepository.create({
-      ...payload,
-      status: payload.status || (payload.publishImmediately ? 'Publicado' : 'Borrador'),
-      code: payload.code || `COM-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`,
-    });
+router.post(
+  '/',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const saved = await createAnnouncement(req.body);
     res.status(201).json(announcementToResponse(saved));
-  } catch (error) {
-    res.status(400).json({ message: 'Error al crear el comunicado', error: error.message });
-  }
-});
+  }, { status: 400, message: 'Error al crear el comunicado' })
+);
 
-router.put('/:id', async (req, res) => {
-  try {
-    const payload = attachmentsPayloadToDb(req.body);
-
-    const updated = await announcementRepository.updateById(req.params.id, payload);
+router.put(
+  '/:id',
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const updated = await updateAnnouncement(req.params.id, req.body);
     if (!updated) {
       return res.status(404).json({ message: 'Comunicado no encontrado' });
     }
     res.json(announcementToResponse(updated));
-  } catch (error) {
-    res.status(400).json({ message: 'Error al actualizar el comunicado', error: error.message });
-  }
-});
+  }, { status: 400, message: 'Error al actualizar el comunicado' })
+);
 
-router.delete('/:id', async (req, res) => {
-  try {
-    const deleted = await announcementRepository.deleteById(req.params.id);
+router.delete(
+  '/:id',
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const deleted = await deleteAnnouncementById(req.params.id);
     if (!deleted) {
       return res.status(404).json({ message: 'Comunicado no encontrado' });
     }
     res.json({ message: 'Comunicado eliminado correctamente' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error al eliminar el comunicado', error: error.message });
-  }
-});
+  }, { message: 'Error al eliminar el comunicado' })
+);
 
 export default router;
+

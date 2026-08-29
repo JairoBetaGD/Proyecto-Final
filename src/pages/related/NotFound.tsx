@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SidebarMenu from '../../components/SidebarMenu';
 import TopBar from '../../components/TopBar';
-import errorImage from '../../assets/Error.jpg';
+import errorImage from '../../assets/Error404.png';
 
 /**
  * Tracks mouse position to create a subtle parallax effect on the 404 illustration.

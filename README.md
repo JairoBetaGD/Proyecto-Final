@@ -67,24 +67,41 @@ El **Sistema de Comunicados administrativo** es una plataforma interna que permi
 ## 📁 Estructura del Proyecto
 
 ```
-Practice/
+Proyecto Final/
+├── api/
+│   └── index.js                   # Función serverless de Vercel (exporta la app)
 ├── backend/
 │   ├── config/
+│   │   ├── departments.js         # Departamentos válidos (fuente única)
 │   │   └── env.js                 # Carga de variables de entorno
 │   ├── db/
 │   │   └── connection.js          # Conexión MongoDB + fallback SRV
 │   ├── mappers/
 │   │   └── announcementMapper.js  # Transformaciones documento ↔ JSON
+│   ├── middlewares/
+│   │   ├── auth.js                # requireAuth / requireAdmin (JWT)
+│   │   └── errorHandler.js        # asyncHandler + manejador global de errores
 │   ├── models/
-│   │   └── Announcement.js        # Modelo Mongoose
+│   │   ├── Announcement.js        # Modelo Mongoose
+│   │   └── User.js                # Modelo Mongoose (cuentas)
 │   ├── repositories/
-│   │   └── announcementRepository.js # Acceso a datos (DIP)
+│   │   ├── announcementRepository.js # Acceso a datos (DIP)
+│   │   └── userRepository.js         # Acceso a datos de cuentas
 │   ├── routes/
 │   │   ├── health.routes.js       # GET /api/health
-│   │   ├── upload.routes.js       # POST /api/upload
+│   │   ├── upload.routes.js       # POST /api/upload y /api/upload-client
+│   │   ├── auth.routes.js         # /api/auth (register, login, me)
+│   │   ├── maps.routes.js         # GET /api/maps/resolve
 │   │   └── announcements.routes.js# CRUD de comunicados
 │   ├── services/
-│   │   └── blobStorageService.js  # Subida de archivos a Vercel Blob
+│   │   ├── announcementService.js # Reglas de negocio de comunicados
+│   │   ├── authService.js         # Registro y login (cuentas)
+│   │   ├── tokenService.js        # Firma/verificación JWT (fuente única del secreto)
+│   │   ├── blobStorageService.js  # Subida multipart a Vercel Blob
+│   │   ├── blobClientUploadService.js # Autorización de client uploads
+│   │   └── mapUrlResolver.js      # Resolución de enlaces cortos de Maps
+│   ├── utils/
+│   │   └── httpError.js           # Error HTTP con status (manejo central)
 │   ├── .env                       # Variables de entorno (no versionado)
 │   ├── .env.example               # Plantilla de variables
 │   ├── package.json
@@ -100,19 +117,31 @@ Practice/
 │   │   ├── DescriptionEditor.tsx        # Editor enriquecido + subida de archivos
 │   │   ├── Layout.tsx                   # Layout raíz con navegación
 │   │   ├── Modal.tsx                    # Modal reutilizable
+│   │   ├── RequireAuth.tsx              # Guarda de rutas autenticadas
 │   │   ├── SidebarMenu.tsx              # Menú lateral
 │   │   └── TopBar.tsx                   # Barra superior
 │   │
+│   ├── context/
+│   │   ├── AuthContext.tsx         # Estado global de sesión (Provider)
+│   │   ├── auth.context.ts         # Definición del contexto de sesión
+│   │   ├── ThemeContext.tsx        # Estado global del tema (Provider)
+│   │   └── theme.context.ts        # Definición del contexto de tema
+│   │
 │   ├── data/
-│   │   └── communications.ts     # Tipos, normalización y mapeos
+│   │   └── communications.ts       # Tipos, normalización y mapeos
 │   │
 │   ├── hooks/
-│   │   ├── useAnnouncementForm.ts # Lógica de formulario (crear/editar)
-│   │   ├── useBackendHealth.ts    # Estado de conexión del backend
-│   │   └── useCommunications.ts   # Lógica CRUD de comunicados
+│   │   ├── useAnnouncementForm.ts  # Lógica de formulario (crear/editar)
+│   │   ├── useAuth.ts              # Acceso al contexto de sesión
+│   │   ├── useBackendHealth.ts     # Estado de conexión del backend
+│   │   ├── useCommunications.ts    # Lógica CRUD de comunicados
+│   │   └── useTheme.ts             # Acceso al contexto de tema
 │   │
 │   ├── pages/
-│   │   ├── DashboardPage.tsx      # Panel de control
+│   │   ├── DashboardPage.tsx       # Panel de control
+│   │   ├── LoginPage.tsx           # Inicio de sesión
+│   │   ├── SettingsPage.tsx        # Cuenta y preferencias
+│   │   ├── SignUpPage.tsx          # Registro de cuenta
 │   │   └── related/
 │   │       ├── AnnouncementsPage.tsx    # Listado + modales CRUD
 │   │       ├── EditAnnouncementPage.tsx # Formulario de edición
@@ -121,18 +150,22 @@ Practice/
 │   │       └── ViewDetailsPage.tsx      # Detalle del comunicado
 │   │
 │   ├── services/
-│   │   ├── api.ts                 # Cliente Axios + endpoints
-│   │   └── blob.ts                # Cliente de subida de archivos
+│   │   ├── api.ts                  # Cliente Axios + endpoints
+│   │   ├── auth.ts                 # Endpoints de autenticación
+│   │   ├── blob.ts                 # Cliente de subida de archivos
+│   │   └── token.ts                # Gestión del token JWT (localStorage)
 │   │
 │   ├── types/
 │   │   └── communicationDetail.ts # Tipos de comunicación/detalle (ISP)
 │   │
 │   ├── utils/
-│   │   ├── attachmentLimits.ts    # Límites de tamaño por archivo/comunicado
-│   │   ├── communicationMappers.ts# Communication → CommunicationDetail
-│   │   ├── filePreview.ts         # Detección del tipo de vista previa
-│   │   ├── sanitizeHtml.ts        # Sanitización de HTML
-│   │   └── styleMaps.ts           # Mapas centralizados de estilos
+│   │   ├── announcementPayload.ts  # Formulario → payload de API (mapeador puro)
+│   │   ├── attachmentLimits.ts     # Límites de tamaño por archivo/comunicado
+│   │   ├── communicationFilters.ts # Filtro/orden de listados
+│   │   ├── communicationMappers.ts # Communication → CommunicationDetail
+│   │   ├── filePreview.ts          # Detección del tipo de vista previa
+│   │   ├── sanitizeHtml.ts         # Sanitización de HTML
+│   │   └── styleMaps.ts            # Mapas centralizados de estilos
 │   │
 │   ├── App.tsx                    # Configuración de rutas
 │   ├── App.css
@@ -163,8 +196,8 @@ Practice/
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/JairoBetancourt/Proyect.git
-cd Proyect/Practice
+git clone https://github.com/JairoBetaGD/Proyecto-Final.git
+cd "Proyecto Final"
 ```
 
 ### 2. Instalar dependencias del frontend
@@ -214,8 +247,8 @@ npm start          # producción
 ### Frontend (puerto 5173)
 
 ```bash
-cd Practice
-npm run dev
+# desde la raíz del proyecto
+pnpm dev          # o: npm run dev
 ```
 
 Abre [http://localhost:5173](http://localhost:5173) en el navegador.
@@ -235,13 +268,20 @@ Base URL: `http://localhost:5000/api`
 | `POST` | `/announcements` | Crea un nuevo comunicado | 201, 400 |
 | `PUT` | `/announcements/:id` | Actualiza un comunicado existente | 200, 404, 400 |
 | `DELETE` | `/announcements/:id` | Elimina un comunicado | 200, 404, 500 |
+| `POST` | `/auth/register` | Crea cuenta `{ username, password, department }` | 201, 400, 409 |
+| `POST` | `/auth/login` | Inicia sesión y devuelve `{ token, user }` | 200, 400, 401 |
+| `GET` | `/auth/me` | Devuelve la cuenta actual (requiere token) | 200, 401 |
+| `POST` | `/upload-client` | Autoriza subidas directas del navegador a Vercel Blob | 200, 400, 500 |
+| `GET` | `/maps/resolve?url=` | Resuelve enlaces cortos de Google Maps a su URL final | 200, 400 |
+
+> Salvo `/health`, `/auth/register` y `/auth/login`, todos los endpoints requieren la cabecera `Authorization: Bearer <token>`.
 
 ### Ejemplo de payload POST/PUT
 
 ```json
 {
   "title": "Nueva actualización de protocolos",
-  "category": "Servicio al cliente",
+  "category": "Administración",
   "priority": "Alta",
   "content": "Descripción del comunicado...",
   "status": "Publicado",
@@ -286,6 +326,54 @@ Base URL: `http://localhost:5000/api`
 
 ---
 
+## 🔐 Autenticación (Login y Registro)
+
+El sistema gestiona cuentas por **usuario, contraseña y departamento**. Cada cuenta solo puede **ver los comunicados de su departamento** (el campo `category` del comunicado es la etiqueta del departamento). La cuenta de administrador tiene **todos los privilegios** (ve todo y puede editar/eliminar).
+
+### Cuenta de administrador (hardcodeada)
+
+| Campo | Valor por defecto |
+|---|---|
+| Usuario | `admin` |
+| Contraseña | `admin123` |
+| Rol | `admin` (todos los privilegios) |
+
+Se puede sobreescribir con las variables de entorno `ADMIN_USERNAME` y `ADMIN_PASSWORD`. No se guarda en la base de datos.
+
+### Endpoints
+
+| Método | Ruta | Descripción | Requiere token |
+|---|---|---|---|
+| `POST` | `/api/auth/register` | Crea cuenta `{ username, password, department }` | ❌ |
+| `POST` | `/api/auth/login` | Inicia sesión, devuelve `{ token, user }` | ❌ |
+| `GET` | `/api/auth/me` | Cuenta actual | ✅ `Bearer <token>` |
+
+### Reglas por rol
+
+| Acción | Usuario normal | Admin |
+|---|---|---|
+| Ver comunicados | Solo los de **su departamento** | Todos |
+| Crear comunicado | Sí (departamento preseleccionado) | Sí (elige departamento) |
+| Editar comunicado | ❌ | ✅ |
+| Eliminar comunicado | ❌ | ✅ |
+
+### Frontend
+
+- `/login` — página de inicio de sesión (usuario + contraseña).
+- `/signup` — registro de cuenta (usuario + contraseña + confirmación + departamento).
+- El token JWT se guarda en `localStorage` y se adjunta automáticamente a cada petición vía interceptor de axios.
+- Las rutas `/` y `/Announcements` están protegidas: sin sesión redirigen a `/login`.
+
+### Variables de entorno adicionales
+
+| Variable | Descripción |
+|---|---|
+| `AUTH_SECRET` | Secreto para firmar los tokens JWT |
+| `ADMIN_USERNAME` | Usuario del admin hardcodeado (default `admin`) |
+| `ADMIN_PASSWORD` | Contraseña del admin hardcodeado (default `admin123`) |
+
+---
+
 ## 🗄️ Modelo de Datos
 
 ### Announcement (Mongoose)
@@ -293,7 +381,7 @@ Base URL: `http://localhost:5000/api`
 | Campo | Tipo | Requerido | Default | Descripción |
 |---|---|---|---|---|
 | `title` | String | ✅ | — | Título del comunicado |
-| `category` | String | ✅ | `'Servicio al cliente'` | Categoría |
+| `category` | String | ✅ | `'Administración'` | Categoría |
 | `priority` | String | ✅ | `'Media'` | `Alta` / `Media` / `Baja` |
 | `content` | String | ✅ | `''` | Contenido HTML/plano |
 | `status` | String | ❌ | `'Publicado'` | `Publicado` / `Borrador` / `Archivado` / `Programado` |
@@ -361,6 +449,7 @@ Base URL: `http://localhost:5000/api`
 | `components/AnnouncementFormFooter.tsx` | Pie de formulario compartido |
 | `components/AttachmentPreviewModal.tsx` | Vista previa de adjuntos |
 | `utils/communicationMappers.ts` | `Communication` → `CommunicationDetail` |
+| `utils/announcementPayload.ts` | Formulario → payload de la API (mapeador puro) |
 | `utils/filePreview.ts` | Clasificación del tipo de vista previa |
 | `utils/styleMaps.ts` | Mapas de estilos |
 
@@ -372,7 +461,14 @@ Base URL: `http://localhost:5000/api`
 | `db/connection.js` | Conexión a MongoDB + fallback SRV |
 | `mappers/announcementMapper.js` | Transformación documento ↔ JSON |
 | `repositories/announcementRepository.js` | Acceso a datos (Mongoose) |
-| `services/blobStorageService.js` | Subida de archivos a Vercel Blob |
+| `services/announcementService.js` | Reglas de negocio (visibilidad por rol, defaults, normalización) |
+| `services/authService.js` | Registro y login de cuentas |
+| `services/tokenService.js` | Firma/verificación de JWT (fuente única del secreto) |
+| `services/blobStorageService.js` | Subida multipart a Vercel Blob |
+| `services/blobClientUploadService.js` | Autorización de client uploads |
+| `middlewares/auth.js` | `requireAuth` / `requireAdmin` |
+| `middlewares/errorHandler.js` | `asyncHandler` + manejador global de errores (OCP) |
+| `utils/httpError.js` | Error HTTP con status para el manejo central |
 | `routes/*.routes.js` | Capa HTTP (parsear request / responder) |
 | `server.js` | Composición de la app (Express + routers) |
 
@@ -404,7 +500,9 @@ Base URL: `http://localhost:5000/api`
 
 - Los **hooks** dependen de la capa de **servicios** (`api.ts`, `blob.ts`), no de implementaciones concretas.
 - Los **componentes de presentación** reciben datos por **props**, no importan la API directamente.
-- En el **backend**, las **rutas** dependen del **repositorio** (`announcementRepository`) y de **mapeadores** puros, sin conocer Mongoose. Cambiar la fuente de datos no afecta la capa HTTP.
+- En el **backend**, las **rutas** dependen del **servicio** (`announcementService`), que orquesta el **repositorio** (`announcementRepository`) y **mapeadores** puros, sin conocer Mongoose ni Express. Cambiar la fuente de datos no afecta la capa HTTP.
+- La firma/verificación de JWT vive en `services/tokenService.js`: `authService` y el middleware `requireAuth` dependen de esa abstracción (una única fuente de verdad para el secreto).
+- Los errores de negocio (`HttpError` y `AuthError`) se traducen a JSON en `middlewares/errorHandler.js`; agregar un tipo de error nuevo no obliga a modificar rutas.
 
 ---
 
@@ -420,7 +518,7 @@ Base URL: `http://localhost:5000/api`
 
 ## 📜 Scripts Disponibles
 
-### Frontend (`Practice/package.json`)
+### Frontend (raíz del proyecto, `package.json`)
 
 | Script | Comando | Descripción |
 |---|---|---|
@@ -429,8 +527,9 @@ Base URL: `http://localhost:5000/api`
 | `lint` | `eslint .` | Linter |
 | `preview` | `vite preview` | Previsualiza el build |
 | `vercel-build` | `npm install --prefix backend && npm run build` | Build para Vercel |
+| `check:lockfile` | `pnpm install --frozen-lockfile --lockfile-only` | Verifica que el lockfile esté sincronizado |
 
-### Backend (`Practice/backend/package.json`)
+### Backend (`backend/package.json`)
 
 | Script | Comando | Descripción |
 |---|---|---|
@@ -463,12 +562,16 @@ Base URL: `http://localhost:5000/api`
 
 ### Configuración automática
 
-El proyecto incluye un archivo `vercel.json` dentro de `Practice/` con:
+El proyecto incluye un archivo `vercel.json` en la raíz con:
 
 ```json
 {
-  "buildCommand": "npm run vercel-build",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm run vercel-build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/index.js": { "maxDuration": 60 }
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index" },
     { "source": "/(.*)", "destination": "/index.html" }
@@ -484,8 +587,8 @@ El proyecto incluye un archivo `vercel.json` dentro de `Practice/` con:
    - Ve a [vercel.com](https://vercel.com) y haz clic en **Add New → Project**.
    - Conecta tu cuenta de GitHub y selecciona el repositorio `Proyect`.
 
-3. **Configura el Root Directory** (Importante):
-   - En **Root Directory**, selecciona `Practice` (la carpeta que contiene `vercel.json`).
+3. **Deja el Root Directory vacío** (Importante):
+   - La raíz del repositorio ya es el proyecto: contiene `package.json`, `vercel.json` y la carpeta `api/`.
 
 4. **Configura las variables de entorno** en la pestaña **Environment Variables**:
    - `MONGODB_URI` (o `MONGO_URI`): Tu URI de MongoDB Atlas, por ejemplo:
@@ -497,9 +600,9 @@ El proyecto incluye un archivo `vercel.json` dentro de `Practice/` con:
 
 5. **Despliega**:
    - Haz clic en **Deploy**.
-   - Vercel ejecutará `npm run vercel-build`, que:
-     - Instala dependencias del backend (`npm install --prefix backend`)
-     - Construye el frontend (`tsc -b && vite build`)
+   - Vercel ejecutará:
+     - `pnpm install --frozen-lockfile` (dependencias del frontend, con lockfile determinista)
+     - `pnpm run vercel-build`, que instala el backend (`npm install --prefix backend`) y construye el frontend (`tsc -b && vite build`)
 
 6. **Verifica el despliegue**:
    - Frontend: `https://tu-proyecto.vercel.app/`
@@ -520,7 +623,7 @@ Vercel
 
 - El backend se exporta como función serverless de Vercel (Express corre dentro de `api/index.js`).
 - La conexión a MongoDB se mantiene en caliente con fallback automático (resolución manual de SRV si es necesario).
-- El backend está **modularizado**: `server.js` solo compone routers (`routes/`), que dependen del repositorio (`repositories/`) y de mapeadores puros (`mappers/`).
+- El backend está **modularizado (SOLID)**: `server.js` solo compone routers (`routes/`); las rutas dependen de los servicios (`services/`), que orquestan los repositorios (`repositories/`) y mapeadores puros (`mappers/`); los errores se traducen a JSON en un único punto (`middlewares/errorHandler.js`).
 - Los archivos se suben a **Vercel Blob** y se guarda solo su **URL** en MongoDB (sin binarios).
 - Las rutas del frontend funcionan gracias a los `rewrites` en `vercel.json`.
 - En desarrollo local, el proxy de Vite envía `/api` a `http://localhost:5000`.

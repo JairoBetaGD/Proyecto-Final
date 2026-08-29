@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import SidebarMenu from '../../components/SidebarMenu';
 import TopBar from '../../components/TopBar';
+import { useAuth } from '../../hooks/useAuth';
 import { deleteAnnouncement } from '../../services/api';
 import { StatusPill, PriorityPill } from '../../components/Badges';
 import { sanitizeHtml } from '../../utils/sanitizeHtml';
@@ -34,6 +35,9 @@ const BMDetalleComunicado: React.FC<BMDetalleComunicadoProps> = ({
 }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
 
   const activeCommunication = communication;
   const contentHtml = sanitizeHtml(activeCommunication.content);
@@ -238,20 +242,24 @@ const BMDetalleComunicado: React.FC<BMDetalleComunicadoProps> = ({
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button className="px-5 py-2.5 border border-[#747780] rounded-lg text-[12px] leading-4 tracking-[0.05em] font-semibold text-[#001736] hover:bg-[#e6e8ea] transition-all">
-                    Editar Comunicado
-                  </button>
+                  {isAdmin && (
+                    <button className="px-5 py-2.5 border border-[#747780] rounded-lg text-[12px] leading-4 tracking-[0.05em] font-semibold text-[#001736] hover:bg-[#e6e8ea] transition-all">
+                      Editar Comunicado
+                    </button>
+                  )}
                   <button className="px-5 py-2.5 bg-[#001736] text-white rounded-lg text-[12px] leading-4 tracking-[0.05em] font-semibold shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2">
                     <span className="material-symbols-outlined text-[18px]">share</span>
                     Compartir
                   </button>
-                  <button
-                    onClick={() => setIsDeleteModalOpen(true)}
-                    className="px-5 py-2.5 bg-[#ba1a1a] text-white rounded-lg text-[12px] leading-4 tracking-[0.05em] font-semibold shadow-md hover:bg-[#ba1a1a]/90 active:scale-95 transition-all flex items-center gap-2"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">delete</span>
-                    Eliminar
-                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => setIsDeleteModalOpen(true)}
+                      className="px-5 py-2.5 bg-[#ba1a1a] text-white rounded-lg text-[12px] leading-4 tracking-[0.05em] font-semibold shadow-md hover:bg-[#ba1a1a]/90 active:scale-95 transition-all flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">delete</span>
+                      Eliminar
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

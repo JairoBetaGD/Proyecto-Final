@@ -12,6 +12,127 @@ body {
   background-color: #f7f9fb;
 }
 
+/* Modo oscuro: se activa con la clase `dark` en <html> (ver ThemeContext). */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #0b141d;
+}
+
+/* ---- Superficies ---- */
+.dark .bg-white {
+  background-color: #111e2e;
+}
+.dark .bg-\[\#f7f9fb\] {
+  background-color: #0b141d;
+}
+.dark .bg-\[\#f2f4f6\],
+.dark .bg-\[\#eceef0\] {
+  background-color: #16232f;
+}
+.dark .bg-\[\#eceef0\]\/50 {
+  background-color: rgba(22, 35, 47, 0.5);
+}
+.dark .bg-\[\#e6e8ea\] {
+  background-color: #1d2a3a;
+}
+.dark .bg-\[\#001736\]\/5 {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+.dark .bg-\[\#001736\]\/10 {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ---- Textos ---- */
+.dark .text-\[\#001736\] {
+  color: #e9eef6;
+}
+.dark .text-\[\#191c1e\] {
+  color: #dbe3ec;
+}
+.dark .text-\[\#43474f\] {
+  color: #a5b1c1;
+}
+.dark .text-\[\#747780\] {
+  color: #8b98a9;
+}
+.dark .text-\[\#002b5c\] {
+  color: #8ab4f8;
+}
+.dark .text-\[\#6e5900\] {
+  color: #e5c968;
+}
+.dark .text-\[\#725c00\] {
+  color: #d9c058;
+}
+.dark .group:hover .group-hover\:text-\[\#002b5c\] {
+  color: #8ab4f8;
+}
+.dark .peer:checked ~ .peer-checked\:text-\[\#001736\] {
+  color: #e9eef6;
+}
+
+/* ---- Bordes ---- */
+.dark .border-\[\#c4c6d0\] {
+  border-color: #24384d;
+}
+.dark .border-\[\#c4c6d0\]\/20,
+.dark .border-\[\#c4c6d0\]\/30 {
+  border-color: #1f2f42;
+}
+.dark .border-\[\#747780\] {
+  border-color: #3d5166;
+}
+.dark .border-\[\#001736\] {
+  border-color: #3d5a80;
+}
+.dark .border-\[\#f7f9fb\] {
+  border-color: #0b141d;
+}
+.dark .divide-\[\#c4c6d0\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #24384d;
+}
+
+/* ---- Estados hover ---- */
+.dark .hover\:bg-\[\#e6e8ea\]:hover,
+.dark .hover\:bg-\[\#eceef0\]:hover,
+.dark .hover\:bg-white:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+.dark .hover\:bg-\[\#f2f4f6\]:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+.dark .hover\:bg-\[\#001736\]\/10:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.dark .hover\:bg-\[\#ffdad6\]:hover {
+  background-color: rgba(186, 26, 26, 0.25);
+}
+
+/* ---- Estados focus ---- */
+.dark .focus\:ring-\[\#002b5c\]:focus {
+  --tw-ring-color: rgba(138, 180, 248, 0.4);
+}
+.dark .focus\:border-\[\#002b5c\]:focus {
+  border-color: #8ab4f8;
+}
+
+/* ---- Selects nativos (opciones del desplegable) ---- */
+.dark select option {
+  background-color: #111e2e;
+  color: #e9eef6;
+}
+
+/* ---- Contenido enriquecido y scrollbars ---- */
+.dark .rich-content a {
+  color: #8ab4f8;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #2c4258;
+}
+
 .material-symbols-outlined {
   font-family: 'Material Symbols Outlined';
   font-weight: 400;

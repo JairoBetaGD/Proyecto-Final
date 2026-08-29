@@ -35,7 +35,7 @@ const announcementSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      default: 'Servicio al cliente',
+      default: 'Administración',
     },
     priority: {
       type: String,

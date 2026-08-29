@@ -1,6 +1,6 @@
 const payload = {
   title: "TEST_VIDEO_4",
-  category: "Servicio al cliente",
+  category: "Administración",
   priority: "Baja",
   content: "prueba video MP4 REAL generado con Node",
   status: "Publicado",

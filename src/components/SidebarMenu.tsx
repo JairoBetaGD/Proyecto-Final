@@ -1,4 +1,5 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 interface NavItem {
   label: string;
@@ -9,11 +10,13 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', icon: 'dashboard', path: '/' },
   { label: 'Comunicados', icon: 'campaign', path: '/Announcements' },
-  { label: 'Configuracion', icon: 'settings', path: '/NotFound' },
+  { label: 'Configuración', icon: 'settings', path: '/settings' },
 ];
 
 export default function SidebarMenu() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const pathname = location.pathname;
 
   const isActive = (path: string) => {
@@ -23,6 +26,17 @@ export default function SidebarMenu() {
 
     return pathname === path || pathname.startsWith(path);
   };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+
+  const isAdmin = user?.role === 'admin';
+  const displayName = user?.username || 'Usuario';
+  const displayRole = isAdmin
+    ? 'Administrador'
+    : user?.department || 'Usuario';
 
   return (
     <aside className="fixed left-0 top-0 h-full w-64 bg-[#001736] shadow-md flex flex-col py-4 z-40">
@@ -56,15 +70,24 @@ export default function SidebarMenu() {
         })}
       </nav>
 
-      <div className="px-6 py-4 flex items-center space-x-3 mt-auto border-t border-[#7594cb]/10">
-        <div className="w-10 h-10 rounded-full bg-[#037300] flex items-center justify-center">
-          <span className="material-symbols-outlined text-[#8AFF8A]">person</span>
-        </div>
-        <div>
-          <p className="text-white font-bold text-[12px] leading-4 tracking-[0.05em] font-semibold">
-            Admin
-          </p>
-          <p className="text-[#7594cb] text-[10px]">administrativo Admin</p>
+      <div className="px-6 py-4 border-t border-[#7594cb]/10">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-full bg-[#037300] flex items-center justify-center">
+            <span className="material-symbols-outlined text-[#8AFF8A]">person</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-bold text-[12px] leading-4 tracking-[0.05em] font-semibold truncate">
+              {displayName}
+            </p>
+            <p className="text-[#7594cb] text-[10px] truncate">{displayRole}</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            title="Cerrar sesión"
+            className="text-[#7594cb] hover:bg-[#aac7ff]/10 p-2 rounded-lg transition-colors"
+          >
+            <span className="material-symbols-outlined text-[18px]">logout</span>
+          </button>
         </div>
       </div>
     </aside>

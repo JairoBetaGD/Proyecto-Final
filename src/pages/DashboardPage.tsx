@@ -16,6 +16,15 @@ import { Modal } from '../components/Modal';
 import {
   type Communication,
 } from '../data/communications';
+// SRP: el filtrado/orden de listados vive en su propia utilidad reutilizable.
+import {
+  applyCommunicationFilters,
+  isDefaultFilterState,
+  PRIORITY_FILTER_OPTIONS,
+  SORT_OPTIONS,
+  type PriorityFilter,
+  type SortOption,
+} from '../utils/communicationFilters';
 
 const BMComunicadosDashboard: React.FC = () => {
   const { communications, isLoading: isLoadingCommunications } = useCommunications();
@@ -36,14 +45,16 @@ const BMComunicadosDashboard: React.FC = () => {
     setIsViewModalOpen(false);
   };
 
-  const recentCommunications: Communication[] =
-    [...communications]
-      .sort((left, right) => {
-        const leftDate = new Date(left.createdAt || left.updatedAt || 0).getTime();
-        const rightDate = new Date(right.createdAt || right.updatedAt || 0).getTime();
-        return rightDate - leftDate;
-      })
-      .slice(0, 5);
+  // Filtros del panel: prioridad y orden (fecha o alfabético).
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
+  const [sortOption, setSortOption] = useState<SortOption>('date-desc');
+
+  const isDefaultView = isDefaultFilterState(priorityFilter, sortOption);
+
+  // Vista por defecto: los 5 más recientes; con filtros activos: todos los resultados.
+  const visibleCommunications: Communication[] = isDefaultView
+    ? applyCommunicationFilters(communications, priorityFilter, sortOption).slice(0, 5)
+    : applyCommunicationFilters(communications, priorityFilter, sortOption);
 
   const publishedCount = communications.filter(
     (item) => item.status === 'Publicado'
@@ -83,13 +94,34 @@ const BMComunicadosDashboard: React.FC = () => {
                 Gestión integral de comunicaciones corporativas
               </p>
             </div>
-            <div className="flex gap-3">
-              <button className="px-4 py-2 border border-[#747780] rounded-lg text-[12px] leading-4 tracking-[0.05em] font-semibold text-[#191c1e] hover:bg-[#e6e8ea] transition-all">
-                Exportar Reporte
-              </button>
-              <button className="px-4 py-2 bg-[#037300] text-[#8AFF8A] rounded-lg text-[12px] leading-4 tracking-[0.05em] font-semibold font-bold shadow-md hover:brightness-95 transition-all">
-                Filtros Avanzados
-              </button>
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-[#43474f] text-[20px]">
+                filter_list
+              </span>
+              <select
+                value={priorityFilter}
+                onChange={(event) => setPriorityFilter(event.target.value as PriorityFilter)}
+                aria-label="Filtrar por prioridad"
+                className="px-3 py-2 rounded-lg border border-[#c4c6d0] bg-[#f7f9fb] text-[13px] leading-[18px] font-medium text-[#001736] focus:ring-2 focus:ring-[#001736] outline-none"
+              >
+                {PRIORITY_FILTER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={sortOption}
+                onChange={(event) => setSortOption(event.target.value as SortOption)}
+                aria-label="Ordenar comunicados"
+                className="px-3 py-2 rounded-lg border border-[#c4c6d0] bg-[#f7f9fb] text-[13px] leading-[18px] font-medium text-[#001736] focus:ring-2 focus:ring-[#001736] outline-none"
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -165,7 +197,9 @@ const BMComunicadosDashboard: React.FC = () => {
           <div className="bg-white rounded-xl shadow-[0_4px_12px_rgba(0,43,92,0.08)] overflow-hidden">
             <div className="px-8 py-6 border-b border-[#c4c6d0] flex justify-between items-center bg-[#f2f4f6]">
               <h3 className="text-[20px] leading-7 font-semibold text-[#001736]">
-                Últimos cinco comunicados publicados
+                {isDefaultView
+                  ? 'Últimos cinco comunicados publicados'
+                  : `Comunicados (${visibleCommunications.length})`}
               </h3>
               <a href="/Announcements">
                 <button className="text-[#001736] text-[12px] leading-4 tracking-[0.05em] font-semibold flex items-center gap-1 hover:underline">
@@ -202,14 +236,14 @@ const BMComunicadosDashboard: React.FC = () => {
                         Cargando comunicados...
                       </td>
                     </tr>
-                  ) : recentCommunications.length === 0 ? (
+                  ) : visibleCommunications.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-8 py-8 text-center text-[#43474f]">
                         No hay comunicados para mostrar.
                       </td>
                     </tr>
                   ) : (
-                    recentCommunications.map((comm) => (
+                    visibleCommunications.map((comm) => (
                       <tr
                         key={comm.id}
                         onClick={() => handleView(comm)}

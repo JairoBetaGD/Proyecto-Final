@@ -54,16 +54,16 @@ export const PRIORITY_DOT_STYLES: Record<string, string> = {
 };
 
 export const CATEGORY_STYLES: Record<string, string> = {
-  'Servicio al cliente': 'bg-[#1d2d41] text-[#d3e4fe]',
-  Counter: 'bg-[#d3e4fe] text-[#38485d]',
-  Almacén: 'bg-[#037300] text-[#8AFF8A]',
-  Digitación: 'bg-[#d6e3ff] text-[#264779]',
-  Devolución: 'bg-[#ffdad6] text-[#93000a]',
-  TI: 'bg-[#d3e4fe] text-[#38485d]',
+  Administración: 'bg-[#1d2d41] text-[#d3e4fe]',
+  Finanzas: 'bg-[#b7c8e1] text-[#0b1c30]',
   'Recursos Humanos': 'bg-[#ffe07c] text-[#564500]',
-  Contabilidad: 'bg-[#b7c8e1] text-[#0b1c30]',
-  Sucursales: 'bg-[#037300] text-[#8AFF8A]',
+  Marketing: 'bg-[#ffdad6] text-[#93000a]',
+  Ventas: 'bg-[#d3e4fe] text-[#38485d]',
+  Operaciones: 'bg-[#d6e3ff] text-[#264779]',
+  Logística: 'bg-[#037300] text-[#8AFF8A]',
   Compras: 'bg-[#aac7ff] text-[#001b3e]',
+  Tecnología: 'bg-[#e0e3ff] text-[#2b1e5e]',
+  Legal: 'bg-[#f5e8f9] text-[#5b1b6e]',
 };
 
 export const DEFAULT_CATEGORY_STYLE = 'bg-[#e0e3e5] text-[#191c1e]';

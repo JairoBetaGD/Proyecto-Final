@@ -28,3 +28,4 @@ backend/.env
 
 .vercel
 .env*
+!.env.example
