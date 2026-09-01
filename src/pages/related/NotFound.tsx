@@ -55,15 +55,6 @@ const BM404Page: React.FC = () => {
       <SidebarMenu />
 
       <TopBar title="administrativo" searchPlaceholder="Buscar envíos o documentos...">
-        <div className="flex items-center gap-4">
-          <button className="p-2 text-[#43474f] hover:bg-[#f2f4f6] transition-all rounded-full relative">
-            <span className="material-symbols-outlined">notifications</span>
-            <span className="absolute top-2 right-2 w-2 h-2 bg-[#ba1a1a] rounded-full"></span>
-          </button>
-          <button className="p-2 text-[#43474f] hover:bg-[#f2f4f6] transition-all rounded-full">
-            <span className="material-symbols-outlined">help</span>
-          </button>
-        </div>
       </TopBar>
 
       {/* Main Content Canvas */}
@@ -122,10 +113,6 @@ const BM404Page: React.FC = () => {
               <span className="material-symbols-outlined">dashboard</span>
               Volver al Dashboard
             </a>
-            <button className="px-8 py-3.5 border border-[#c4c6d0] text-[#002b5c] rounded-xl font-bold flex items-center gap-3 hover:bg-[#f2f4f6] transition-all">
-              <span className="material-symbols-outlined">support_agent</span>
-              Contactar Soporte
-            </button>
           </div>
 
           {/* Quick Links / Helpful Content */}

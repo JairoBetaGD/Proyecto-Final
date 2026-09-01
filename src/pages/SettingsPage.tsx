@@ -75,16 +75,7 @@ const SettingsPage: React.FC = () => {
     <div className="bg-[#f7f9fb] text-[#191c1e] min-h-screen font-['Inter',sans-serif]">
       <SidebarMenu />
 
-      <TopBar title="Configuración" searchPlaceholder="Buscar en configuración...">
-        <div className="flex items-center gap-4">
-          <button className="p-2 text-[#001736] hover:bg-[#e6e8ea] transition-colors rounded-full">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-          <button className="p-2 text-[#001736] hover:bg-[#e6e8ea] transition-colors rounded-full">
-            <span className="material-symbols-outlined">help</span>
-          </button>
-        </div>
-      </TopBar>
+      <TopBar title="Configuración" searchPlaceholder="Buscar en configuración..." />
 
       <main className="ml-64 pt-16 min-h-screen">
         <div className="p-8 max-w-[1440px] mx-auto">

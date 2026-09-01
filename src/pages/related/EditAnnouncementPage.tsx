@@ -112,17 +112,7 @@ const BMEditarComunicado: React.FC<BMEditarComunicadoProps> = ({
     <div className="bg-[#f7f9fb] text-[#191c1e] min-h-screen font-['Inter',sans-serif]">
       <SidebarMenu />
 
-      <TopBar title="Sistema de Comunicados" searchPlaceholder="Buscar comunicados...">
-        <div className="flex items-center gap-4">
-          <button className="text-[#43474f] hover:bg-[#e6e8ea] p-2 rounded-full transition-colors cursor-pointer relative">
-            <span className="material-symbols-outlined">notifications</span>
-            <span className="absolute top-2 right-2 w-2 h-2 bg-[#725c00] rounded-full border-2 border-[#f7f9fb]"></span>
-          </button>
-          <button className="text-[#43474f] hover:bg-[#e6e8ea] p-2 rounded-full transition-colors cursor-pointer">
-            <span className="material-symbols-outlined">help</span>
-          </button>
-        </div>
-      </TopBar>
+      <TopBar title="Sistema de Comunicados" searchPlaceholder="Buscar comunicados..." />
 
       {/* Main Content Canvas */}
       <main className="ml-64 pt-16 min-h-screen">

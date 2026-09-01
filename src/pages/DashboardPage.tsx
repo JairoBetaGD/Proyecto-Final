@@ -72,16 +72,7 @@ const BMComunicadosDashboard: React.FC = () => {
     <div className="min-h-screen text-[#191c1e] bg-[#f7f9fb] font-['Inter',sans-serif]">
       <SidebarMenu />
 
-      <TopBar title="Sistema de Comunicados">
-        <div className="flex items-center gap-4">
-          <button className="p-2 text-[#001736] hover:bg-[#e6e8ea] transition-colors rounded-full">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-          <button className="p-2 text-[#001736] hover:bg-[#e6e8ea] transition-colors rounded-full">
-            <span className="material-symbols-outlined">help</span>
-          </button>
-        </div>
-      </TopBar>
+      <TopBar title="Sistema de Comunicados" />
 
       <main className="pl-64 pt-2 min-h-screen">
         <div className="max-w-[1440px] mx-auto p-8">

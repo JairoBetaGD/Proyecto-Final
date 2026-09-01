@@ -133,16 +133,7 @@ const BMComunicadosFull: React.FC = () => {
       {/* Main Content Area */}
       <main className="ml-64 min-h-screen">
 
-        <TopBar title="Sistema de Comunicados">
-          <div className="flex items-center gap-4">
-            <button className="p-2 text-[#001736] hover:bg-[#e6e8ea] transition-colors rounded-full">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
-            <button className="p-2 text-[#001736] hover:bg-[#e6e8ea] transition-colors rounded-full">
-              <span className="material-symbols-outlined">help</span>
-            </button>
-          </div>
-        </TopBar>
+        <TopBar title="Sistema de Comunicados" />
 
         {/* Canvas Content */}
         <div className="pt-2 px-6 pb-8 max-w-[1440px] mx-auto">
@@ -305,21 +296,6 @@ const BMComunicadosFull: React.FC = () => {
               <span>
                 Mostrando {visibleCommunications.length} de {communications.length} comunicados
               </span>
-              <div className="flex space-x-2">
-                <button className="px-3 py-1 border border-[#c4c6d0] rounded hover:bg-white transition-colors">
-                  Prev
-                </button>
-                <button className="px-3 py-1 bg-[#001736] text-white rounded">1</button>
-                <button className="px-3 py-1 border border-[#c4c6d0] rounded hover:bg-white transition-colors">
-                  2
-                </button>
-                <button className="px-3 py-1 border border-[#c4c6d0] rounded hover:bg-white transition-colors">
-                  3
-                </button>
-                <button className="px-3 py-1 border border-[#c4c6d0] rounded hover:bg-white transition-colors">
-                  Next
-                </button>
-              </div>
             </div>
           </div>
         </div>

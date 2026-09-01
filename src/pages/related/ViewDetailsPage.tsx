@@ -131,16 +131,7 @@ const BMDetalleComunicado: React.FC<BMDetalleComunicadoProps> = ({
     <div className="bg-[#f7f9fb] text-[#191c1e] min-h-screen font-['Inter',sans-serif]">
       <SidebarMenu />
 
-      <TopBar title="Sistema de Comunicados">
-        <div className="flex items-center gap-4">
-          <button className="p-2 text-[#001736] hover:bg-[#e6e8ea] transition-colors rounded-full">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-          <button className="p-2 text-[#001736] hover:bg-[#e6e8ea] transition-colors rounded-full">
-            <span className="material-symbols-outlined">help</span>
-          </button>
-        </div>
-      </TopBar>
+      <TopBar title="Sistema de Comunicados" />
 
       {/* Main Content Area */}
       <main className="ml-64 pt-2 min-h-screen">
@@ -242,15 +233,6 @@ const BMDetalleComunicado: React.FC<BMDetalleComunicadoProps> = ({
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  {isAdmin && (
-                    <button className="px-5 py-2.5 border border-[#747780] rounded-lg text-[12px] leading-4 tracking-[0.05em] font-semibold text-[#001736] hover:bg-[#e6e8ea] transition-all">
-                      Editar Comunicado
-                    </button>
-                  )}
-                  <button className="px-5 py-2.5 bg-[#001736] text-white rounded-lg text-[12px] leading-4 tracking-[0.05em] font-semibold shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[18px]">share</span>
-                    Compartir
-                  </button>
                   {isAdmin && (
                     <button
                       onClick={() => setIsDeleteModalOpen(true)}
